@@ -55,7 +55,7 @@ adminRouter.post('/course', adminMiddleware, async (req, res) => {
         description,
         imageURL,
         price,
-        creatorId: userId
+        creatorId: adminId
     })
 
     res.json({
@@ -64,15 +64,41 @@ adminRouter.post('/course', adminMiddleware, async (req, res) => {
     })
 })
 
-adminRouter.put('/course', (req, res) => {
-
+adminRouter.put('/course', adminMiddleware, async (req, res) => {
+    const adminId = req.userId;
+    const { title, description, imageURL, price, courseId } = req.body;
+    const course = await courseModel.updateOne({
+        _id: courseId,      // Update this course
+        creatorId: adminId  // Only if this admin created it
+    },{
+        title,
+        description,
+        imageURL,
+        price,
+    })
+    
+    // Current admin was not able to create the course
+    if (course.matchedCount === 0) {
+        return res.status(403).json({
+            msg: "You are not allowed to update this course or course not found"
+        });
+    }
+    res.json({
+        msg: "Course Updated",
+        courseId: course._id,
+    })
 })
 
-adminRouter.get('/course/getbulk', (req, res) => {
+adminRouter.get('/course/getbulk', adminMiddleware, async (req, res) => {
+    const adminId = req.userId;
+    const courses = await courseModel.find({
+        creatorId: adminId
+    });
 
+    res.json({
+        courses
+    });
 })
-
-
 
 module.exports = {
     adminRouter: adminRouter
