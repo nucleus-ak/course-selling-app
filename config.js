@@ -1,5 +1,5 @@
-const JWT_SECRET_ADMIN = "AMAN";
-const JWT_SECRET_USER = "KUMAR";
+const JWT_SECRET_ADMIN = process.env.JWT_SECRET_ADMIN;
+const JWT_SECRET_USER = process.env.JWT_SECRET_ADMIN;
 
 module.exports = {
     JWT_SECRET_ADMIN,
