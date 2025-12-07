@@ -1,20 +1,67 @@
 const { Router } = require('express');
+const jwt = require('jsonwebtoken');
 const adminRouter = Router();
-const adminModel = require('../db');
+const { adminModel, courseModel } = require('../db');
+const { JWT_SECRET_ADMIN } = require('../config');
+const { adminMiddleware } = require('../middleware/admin');
 
 
-adminRouter.post('/signup', (req, res) => {
-    res.json({
-        msg: "Signup"
+adminRouter.post('/signup', async (req, res) => {
+    const { email, password, firstName, lastName } = req.body;
+        
+    // TODO: Input validation using zod, storing hashed password
+        
+    await adminModel.create({
+        email: email, 
+        password: password, 
+        firstName: firstName,
+        lastName: lastName
     });
+
+    res.json({
+        msg: "Signup Succeeded"
+    })
 });
 
-adminRouter.post('/signin', (req, res) => {
+adminRouter.post('/signin', async (req, res) => {
+    const { email, password } = req.body;
 
+    // Todo: Compare with the hashed password (If previous TODO completed)
+    const admin = await adminModel.findOne({
+        email: email,
+        password: password
+    });
+
+    if(admin) {
+        const token = jwt.sign({
+            id : admin._id
+        }, JWT_SECRET_ADMIN);
+
+        res.json({
+            token: token    
+        });
+    } else {
+        res.status(403).json({
+            msg: "Invalid Creds"
+        });
+    }
 });
 
-adminRouter.post('/course', (req, res) => {
+adminRouter.post('/course', adminMiddleware, async (req, res) => {
+    const adminId = req.userId;
+    const { title, description, imageURL, price } = req.body;
+    const course = await courseModel.create({
+        title,
+        description,
+        imageURL,
+        price,
+        creatorId: userId
+    })
 
+    res.json({
+        msg: "Course Created",
+        courseId: course._id,
+    })
 })
 
 adminRouter.put('/course', (req, res) => {
